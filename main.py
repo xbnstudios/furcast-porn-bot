@@ -123,8 +123,9 @@ def post_media(update: Update, context: CallbackContext) -> None:
 
 def post_media_error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
-        "Sorry, I didn't understand that, or I forgot what we were talking about. "
-        "If that was media that should have been accepted, contact @rileywd"
+        "Hmm, that just looks like text, this system is meant for media. "
+        "If I forgot what we were talking about, try again. "
+        "If you think this is a bug, contact @rileywd"
     )
     return ConversationHandler.END
 
