@@ -156,7 +156,9 @@ post_handler = ConversationHandler(
     entry_points=[
         # CommandHandler("post", post_post, filters=Filters.private),
         MessageHandler(Filters.private & media_filters, post_media),
-        MessageHandler(InvertedFilter(media_filters), post_media_error),
+        MessageHandler(
+            Filters.private & InvertedFilter(media_filters), post_media_error
+        ),
     ],
     states={
         POST_MEDIA: [
