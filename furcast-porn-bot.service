@@ -1,0 +1,11 @@
+[Unit]
+Description=FurCast Porn Bot
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/home/bots/furcast-porn-bot
+ExecStart=/usr/bin/pipenv run ./main.py
+
+[Install]
+WantedBy=default.target

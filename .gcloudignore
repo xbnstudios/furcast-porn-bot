@@ -1,0 +1,8 @@
+#!include:.gitignore
+.gcloudignore
+.gitignore
+.git
+LICENSE
+README.md
+server.py
+test_request.py
