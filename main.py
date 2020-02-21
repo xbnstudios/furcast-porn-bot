@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import timedelta
 from dotenv import load_dotenv
 from flask import make_response, Request
 from html import escape
@@ -9,6 +10,7 @@ from telegram import (
     Bot,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    MessageEntity,
     ParseMode,
     Update,
 )
@@ -76,6 +78,9 @@ def post_cancel(update: Update, context: CallbackContext) -> None:
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
+    post = context.bot.forward_message(
+        porn_chat, update.effective_chat.id, context.user_data["media"]
+    )
     context.bot.send_message(
         porn_chat,
         "Shared by {} with comment:\n{}".format(
@@ -84,9 +89,6 @@ def post_description(update: Update, context: CallbackContext) -> None:
         parse_mode=ParseMode.MARKDOWN,
         disable_notification=True,
         disable_web_page_preview=True,
-    )
-    post = context.bot.forward_message(
-        porn_chat, update.effective_chat.id, context.user_data["media"]
     )
     context.bot.send_message(
         main_chat,
@@ -114,15 +116,15 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 def post_media(update: Update, context: CallbackContext) -> None:
     context.user_data["media"] = update.message.message_id
     update.message.reply_text(
-        "Cool, now just send me a brief note explaining what this is."
+        "Cool, now just send me a brief note explaining what this is, or /cancel"
     )
     return POST_DESCRIPTION
 
 
 def post_media_error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
-        "Sorry, I didn't understand that. If that media should have been"
-        "accepted, contact @rileywd"
+        "Sorry, I didn't understand that, or I forgot what we were talking about. "
+        "If that was media that should have been accepted, contact @rileywd"
     )
     return ConversationHandler.END
 
@@ -132,20 +134,28 @@ def post_post(update: Update, context: CallbackContext) -> None:
     return POST_MEDIA
 
 
+def post_timeout(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Sorry, your last post timed out, try again.")
+    return ConversationHandler.END
+
+
 media_filters = (
-    Filters.animation
+    Filters.entity(MessageEntity.URL)  # Plain URL
+    | Filters.entity(MessageEntity.TEXT_LINK)  # Formatted link
+    | Filters.animation
     | Filters.audio
     | Filters.document
     | Filters.photo
     | Filters.sticker
     | Filters.video
-    | Filters.video_note
-    | Filters.voice
+    | Filters.video_note  # "Telescope" video
+    | Filters.voice  # Voice notes
 )
 post_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("post", post_post, filters=Filters.private),
+        # CommandHandler("post", post_post, filters=Filters.private),
         MessageHandler(Filters.private & media_filters, post_media),
+        MessageHandler(InvertedFilter(media_filters), post_media_error),
     ],
     states={
         POST_MEDIA: [
@@ -153,11 +163,14 @@ post_handler = ConversationHandler(
             MessageHandler(InvertedFilter(media_filters), post_media_error),
         ],
         POST_DESCRIPTION: [
+            CommandHandler("cancel", post_cancel),
             MessageHandler(Filters.text, post_description),
             MessageHandler(InvertedFilter(Filters.text), post_description_error),
         ],
+        ConversationHandler.TIMEOUT: [MessageHandler(Filters.all, post_timeout)],
     },
     fallbacks=[CommandHandler("cancel", post_cancel)],
+    conversation_timeout=timedelta(minutes=3),
 )
 
 
