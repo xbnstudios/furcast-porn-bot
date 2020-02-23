@@ -116,7 +116,8 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 def post_media(update: Update, context: CallbackContext) -> None:
     context.user_data["media"] = update.message.message_id
     update.message.reply_text(
-        "Cool, now just send me a brief note explaining what this is, or /cancel"
+        "Cool, now briefly describe what you sent, notably with any "
+        "necessary content warnings. You can also /cancel"
     )
     return POST_DESCRIPTION
 
