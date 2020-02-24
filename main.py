@@ -50,11 +50,16 @@ class Chats(object):
     riley_test_group = -1001422900025
 
 
-porn_chat = Chats.furcast_nsfw
-main_chat = Chats.furcast
-
-invite_chat = Chats.furcast_nsfw
-admin_chat = Chats.xbn_chatops
+if os.environ.get("TEST_MODE") in [None, 0]:
+    porn_chat = Chats.furcast_nsfw
+    main_chat = Chats.furcast
+    invite_chat = Chats.furcast_nsfw
+    admin_chat = Chats.xbn_chatops
+else:
+    porn_chat = Chats.riley_test_channel
+    main_chat = Chats.riley_test_group
+    invite_chat = Chats.riley_test_channel
+    admin_chat = Chats.xbn_chatops
 
 join_link = os.environ.get("JOIN_LINK")
 apikey = os.environ["APIKEY"]
@@ -92,9 +97,9 @@ def post_description(update: Update, context: CallbackContext) -> None:
     )
     context.bot.send_message(
         main_chat,
-        "⚠️ [NSFW media]({}) shared by {} with comment:\n{}".format(
-            post.link,
+        "{} shared ⚠️ [NSFW media]({}) with comment:\n{}".format(
             update.effective_user.mention_markdown(),
+            post.link,
             update.message.text_markdown,
         ),
         parse_mode=ParseMode.MARKDOWN,
