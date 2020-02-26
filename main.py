@@ -26,6 +26,7 @@ from telegram.ext import (
     Updater,
 )
 from telegram.ext.filters import InvertedFilter
+from telegram.utils.helpers import escape_markdown
 
 load_dotenv()
 if "TELEGRAM_TOKEN" not in os.environ or "APIKEY" not in os.environ:
@@ -88,20 +89,41 @@ def post_description(update: Update, context: CallbackContext) -> None:
     )
     context.bot.send_message(
         porn_chat,
-        "Shared by {} with comment:\n{}".format(
+        "Shared by {} with description:\n{}".format(
             update.effective_user.mention_markdown(), update.message.text_markdown
         ),
         parse_mode=ParseMode.MARKDOWN,
         disable_notification=True,
         disable_web_page_preview=True,
     )
+    mention = "[{}](tg://user?id={})".format(
+        escape_markdown(update.effective_user.first_name), update.effective_user.id
+    )
     context.bot.send_message(
         main_chat,
-        "{} shared ⚠️ [NSFW media]({}) with comment:\n{}".format(
-            update.effective_user.mention_markdown(),
-            post.link,
-            update.message.text_markdown,
+        (
+            "{mention} shared: {description}\n"
+            "[Help/post]({bot})  ⚠️  [View NSFW]({link})"
+        ).format(
+            mention=mention,
+            link=post.link,
+            bot=f"https://t.me/{context.bot.username}",
+            description=update.message.text_markdown,
         ),
+        # "Shared by {}, DM me to join. Description: {}".format(
+        #    mention, update.message.text_markdown
+        # ),
+        # reply_markup=InlineKeyboardMarkup(
+        #    [
+        #        [
+        #            InlineKeyboardButton(
+        #                text="Join AD Channel",
+        #                url=f"https://t.me/{context.bot.username}",
+        #            ),
+        #            InlineKeyboardButton(text="View NSFW", url=post.link),
+        #        ]
+        #    ]
+        # ),
         parse_mode=ParseMode.MARKDOWN,
         disable_notification=True,
         disable_web_page_preview=True,
@@ -130,9 +152,10 @@ def post_media(update: Update, context: CallbackContext) -> None:
 
 def post_media_error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
-        "Hmm, that just looks like text, this system is meant for media. "
-        "If I forgot what we were talking about, try again. "
-        "If you think this is a bug, contact @rileywd"
+        "Hi, I help you share NSFW content. This system is meant for media, "
+        "which I didn't see in what you sent. If I forgot what we were "
+        "talking about, try again. If you need an invite link to the NSFW "
+        "channel, say /start. If you think this is a bug, contact the admins."
     )
     return ConversationHandler.END
 
