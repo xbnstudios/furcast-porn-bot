@@ -103,7 +103,7 @@ def post_description(update: Update, context: CallbackContext) -> None:
         main_chat,
         (
             "{mention} shared: {description}\n"
-            "[Help/post]({bot})  ⚠️  [View NSFW]({link})"
+            "[Join/post]({bot})  ⚠️  [View NSFW]({link})"
         ).format(
             mention=mention,
             link=post.link,
