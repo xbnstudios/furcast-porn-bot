@@ -10,6 +10,7 @@ from telegram import (
     Bot,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    Message,
     MessageEntity,
     ParseMode,
     Update,
@@ -84,55 +85,7 @@ def post_cancel(update: Update, context: CallbackContext) -> None:
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
-    # Porn chat media forward
-    post = context.bot.forward_message(
-        porn_chat, update.effective_chat.id, context.user_data["media"]
-    )
-
-    # Main chat link post
-    mention = "[{}](tg://user?id={})".format(
-        escape_markdown(update.effective_user.first_name), update.effective_user.id
-    )
-    main_group_message = context.bot.send_message(
-        main_chat,
-        (
-            "{mention} shared: {description}\n"
-            "[Join/post]({bot})  ⚠️  [View NSFW]({link})"
-        ).format(
-            mention=mention,
-            link=post.link,
-            bot=f"https://t.me/{context.bot.username}",
-            description=update.message.text_markdown,
-        ),
-        # "Shared by {}, DM me to join. Description: {}".format(
-        #    mention, update.message.text_markdown
-        # ),
-        # reply_markup=InlineKeyboardMarkup(
-        #    [
-        #        [
-        #            InlineKeyboardButton(
-        #                text="Join AD Channel",
-        #                url=f"https://t.me/{context.bot.username}",
-        #            ),
-        #            InlineKeyboardButton(text="View NSFW", url=post.link),
-        #        ]
-        #    ]
-        # ),
-        parse_mode=ParseMode.MARKDOWN,
-        disable_notification=True,
-        disable_web_page_preview=True,
-    )
-
-    # Porn chat description post
-    context.bot.send_message(
-        porn_chat,
-        "Shared by {} ([context]({})) with description:\n{}".format(
-            mention, main_group_message.link, update.message.text_markdown
-        ),
-        parse_mode=ParseMode.MARKDOWN,
-        disable_notification=True,
-        disable_web_page_preview=True,
-    )
+    do_nsfw_post(context.bot, context.user_data["media"], update.message.text_markdown)
     del context.user_data["media"]
     update.message.reply_text("Thanks, posted!")
     return ConversationHandler.END
@@ -146,7 +99,7 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 
 
 def post_media(update: Update, context: CallbackContext) -> None:
-    context.user_data["media"] = update.message.message_id
+    context.user_data["media"] = update.message
     update.message.reply_text(
         "Cool, now briefly describe what you sent, notably with any "
         'necessary content warnings - e.g. "showing off [irl]" or "mouse '
@@ -264,6 +217,37 @@ def start(update: Update, context: CallbackContext) -> None:
     )
 
 
+def nsfw(update: Update, context: CallbackContext) -> None:
+    """Bot /nsfw callback
+    Moves a post to the NSFW channel"""
+
+    if update.effective_chat.id != main_chat:
+        update.message.reply_text("Sorry, this command only works in the main chat.")
+        return
+
+    chat_user = context.bot.get_chat(main_chat).get_member(update.effective_user.id)
+    if chat_user.status not in ["administrator", "creator"]:
+        update.message.reply_text(
+            "Sorry, command is for admins. Please @ one if something should be moved."
+        )
+        return
+
+    move_message = update.message.reply_to_message
+    if move_message is None:
+        update.message.reply_text(
+            "You forgot to reply to the message that needs to be moved!"
+        )
+        return
+
+    description = "(moved from main chat)"
+    parts = update.message.text_markdown.strip().split(" ", 1)
+    if len(parts) > 1:
+        description = parts[1] + " " + description
+
+    do_nsfw_post(context.bot, move_message, description)
+    move_message.delete()
+
+
 def replace_invite_link(update: Update, context: CallbackContext) -> None:
     """Bot /newlink callback
     Replaces bot's invite link for {invite_chat}
@@ -319,6 +303,67 @@ def version(update: Update, context: CallbackContext) -> None:
     )
 
 
+def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) -> None:
+    # Porn chat media forward
+    try:
+        post = bot.forward_message(
+            porn_chat, media_message.chat_id, media_message.message_id
+        )
+    except telegram.error.BadRequest as e:
+        logging.warning(
+            "Error forwarding post. Is the bot admin in the main group? "
+            "Tried to forward %s - %s",
+            media_message.link,
+            e,
+        )
+        return
+
+    # Main chat link post
+    mention = "[{}](tg://user?id={})".format(
+        escape_markdown(media_message.from_user.first_name), media_message.from_user.id
+    )
+    main_group_message = bot.send_message(
+        main_chat,
+        (
+            "{mention} shared: {description}\n"
+            "[Join/post]({bot})  ⚠️  [View NSFW]({link})"
+        ).format(
+            mention=mention,
+            link=post.link,
+            bot=f"https://t.me/{bot.username}",
+            description=description_markdown,
+        ),
+        # "Shared by {}, DM me to join. Description: {}".format(
+        #    mention, description_markdown
+        # ),
+        # reply_markup=InlineKeyboardMarkup(
+        #    [
+        #        [
+        #            InlineKeyboardButton(
+        #                text="Join AD Channel",
+        #                url=f"https://t.me/{bot.username}",
+        #            ),
+        #            InlineKeyboardButton(text="View NSFW", url=post.link),
+        #        ]
+        #    ]
+        # ),
+        parse_mode=ParseMode.MARKDOWN,
+        disable_notification=True,
+        disable_web_page_preview=True,
+    )
+
+    # Porn chat description post
+    bot.send_message(
+        porn_chat,
+        "Shared by {} ([context]({})) with description:\n{}".format(
+            mention, main_group_message.link, description_markdown
+        ),
+        parse_mode=ParseMode.MARKDOWN,
+        disable_notification=True,
+        disable_web_page_preview=True,
+    )
+
+
 def webhook(request: Request):
     logging.info("access_route: %s", ",".join(request.access_route))
     logging.info("args: %s", request.args)
@@ -333,6 +378,7 @@ def webhook(request: Request):
 
 
 dispatcher.add_handler(CommandHandler("newlink", replace_invite_link))
+dispatcher.add_handler(CommandHandler("nsfw", nsfw))
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("version", version))
 dispatcher.add_handler(CallbackQueryHandler(button))
