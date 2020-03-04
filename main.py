@@ -84,22 +84,16 @@ def post_cancel(update: Update, context: CallbackContext) -> None:
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
+    # Porn chat media forward
     post = context.bot.forward_message(
         porn_chat, update.effective_chat.id, context.user_data["media"]
     )
-    context.bot.send_message(
-        porn_chat,
-        "Shared by {} with description:\n{}".format(
-            update.effective_user.mention_markdown(), update.message.text_markdown
-        ),
-        parse_mode=ParseMode.MARKDOWN,
-        disable_notification=True,
-        disable_web_page_preview=True,
-    )
+
+    # Main chat link post
     mention = "[{}](tg://user?id={})".format(
         escape_markdown(update.effective_user.first_name), update.effective_user.id
     )
-    context.bot.send_message(
+    main_group_message = context.bot.send_message(
         main_chat,
         (
             "{mention} shared: {description}\n"
@@ -124,6 +118,17 @@ def post_description(update: Update, context: CallbackContext) -> None:
         #        ]
         #    ]
         # ),
+        parse_mode=ParseMode.MARKDOWN,
+        disable_notification=True,
+        disable_web_page_preview=True,
+    )
+
+    # Porn chat description post
+    context.bot.send_message(
+        porn_chat,
+        "Shared by {} ([context]({})) with description:\n{}".format(
+            mention, main_group_message.link, update.message.text_markdown
+        ),
         parse_mode=ParseMode.MARKDOWN,
         disable_notification=True,
         disable_web_page_preview=True,
