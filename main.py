@@ -100,10 +100,12 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 
 def post_media(update: Update, context: CallbackContext) -> None:
     context.user_data["media"] = update.message
-    update.message.reply_text(
-        "Cool, now briefly describe what you sent, notably with any "
-        'necessary content warnings - e.g. "showing off [irl]" or "mouse '
-        'getting vored". You can also /cancel'
+    update.message.reply_markdown(
+        "Now tell me the *content warnings* and *tags*, e.g.\n"
+        "• irl sexytimes with my mate\n"
+        "• anthro mouse getting vored\n"
+        "• fisting cute anthro wolf\n"
+        "(or /cancel)"
     )
     return POST_DESCRIPTION
 
