@@ -299,7 +299,7 @@ def version(update: Update, context: CallbackContext) -> None:
     Posts bot info and Cloud Function version"""
 
     update.effective_chat.send_message(
-        "[furcast-porn-bot](https://git.xbn.fm/xbn/furcast-porn-bot)\n"
+        "[furcast-porn-bot](https://github.com/xbnstudios/furcast-porn-bot)\n"
         "GCF version: {}".format(os.environ.get("X_GOOGLE_FUNCTION_VERSION")),
         disable_web_page_preview=True,
         parse_mode=ParseMode.MARKDOWN,

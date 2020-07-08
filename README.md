@@ -9,5 +9,5 @@ NSFW channel (for posting).
 * Main group: Delete messages
 * NSFW channel: Send messages, Add members
 
-See the [furcast-tg-bot](https://git.xbn.fm/xbn/furcast-tg-bot) instructions
-for the rest.
+See the [furcast-tg-bot](https://github.com/xbnstudios/furcast-tg-bot)
+instructions for the rest.
