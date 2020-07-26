@@ -39,7 +39,7 @@ join_template = (
     "Hello, {escaped_fname}! The "
     "<a href='https://furcast.fm/chat/#rules'>rules</a> still apply for "
     "content posted via this bot! Just send me media to post. "
-    "Your channel invite link is below."
+    "Your channel invite link is below. Use it before it expires!"
 )
 button_text = "CLICK ME OH YEAH JUST LIKE THAT"
 
