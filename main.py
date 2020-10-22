@@ -85,7 +85,9 @@ def post_cancel(update: Update, context: CallbackContext) -> None:
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
-    do_nsfw_post(context.bot, context.user_data["media"], update.message.text_markdown)
+    do_nsfw_post(
+        context.bot, context.user_data["media"], update.message.text_markdown_v2
+    )
     del context.user_data["media"]
     update.message.reply_text("Thanks, posted!")
     return ConversationHandler.END
@@ -100,7 +102,7 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 
 def post_media(update: Update, context: CallbackContext) -> None:
     context.user_data["media"] = update.message
-    update.message.reply_markdown(
+    update.message.reply_markdown_v2(
         "Now tell me the *content warnings* and *tags*, e.g.\n"
         "• irl sexytimes with my mate\n"
         "• anthro mouse getting vored\n"
@@ -242,7 +244,7 @@ def nsfw(update: Update, context: CallbackContext) -> None:
         return
 
     description = "(moved from main chat)"
-    parts = update.message.text_markdown.strip().split(" ", 1)
+    parts = update.message.text_markdown_v2.strip().split(" ", 1)
     if len(parts) > 1:
         description = parts[1] + " " + description
 
@@ -302,11 +304,15 @@ def version(update: Update, context: CallbackContext) -> None:
         "[furcast-porn-bot](https://github.com/xbnstudios/furcast-porn-bot)\n"
         "GCF version: {}".format(os.environ.get("X_GOOGLE_FUNCTION_VERSION")),
         disable_web_page_preview=True,
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
     )
 
 
 def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) -> None:
+    """Create the posts in both main and AD
+    description_markdown must be markdown v2
+    """
+
     # Porn chat media forward
     try:
         post = bot.forward_message(
@@ -323,7 +329,9 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) ->
 
     # Main chat link post
     mention = "[{}](tg://user?id={})".format(
-        escape_markdown(media_message.from_user.first_name), media_message.from_user.id
+        escape_markdown(media_message.from_user.first_name),
+        media_message.from_user.id,
+        version=2,
     )
     main_group_message = bot.send_message(
         main_chat,
@@ -336,21 +344,7 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) ->
             bot=f"https://t.me/{bot.username}",
             description=description_markdown,
         ),
-        # "Shared by {}, DM me to join. Description: {}".format(
-        #    mention, description_markdown
-        # ),
-        # reply_markup=InlineKeyboardMarkup(
-        #    [
-        #        [
-        #            InlineKeyboardButton(
-        #                text="Join AD Channel",
-        #                url=f"https://t.me/{bot.username}",
-        #            ),
-        #            InlineKeyboardButton(text="View NSFW", url=post.link),
-        #        ]
-        #    ]
-        # ),
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
         disable_notification=True,
         disable_web_page_preview=True,
     )
@@ -361,7 +355,7 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) ->
         "Shared by {} ([context]({})) with description:\n{}".format(
             mention, main_group_message.link, description_markdown
         ),
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
         disable_notification=True,
         disable_web_page_preview=True,
     )
