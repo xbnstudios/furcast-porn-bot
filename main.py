@@ -6,6 +6,7 @@ from flask import make_response, Request
 from html import escape
 import logging
 import os
+
 from telegram import (
     Bot,
     InlineKeyboardButton,
@@ -27,7 +28,6 @@ from telegram.ext import (
     Updater,
 )
 from telegram.ext.filters import InvertedFilter
-from telegram.utils.helpers import escape_markdown
 
 load_dotenv()
 if "TELEGRAM_TOKEN" not in os.environ or "APIKEY" not in os.environ:
@@ -85,9 +85,7 @@ def post_cancel(update: Update, context: CallbackContext) -> None:
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
-    do_nsfw_post(
-        context.bot, context.user_data["media"], update.message.text_markdown_v2
-    )
+    do_nsfw_post(context.bot, context.user_data["media"], update.message.text_html)
     del context.user_data["media"]
     update.message.reply_text("Thanks, posted!")
     return ConversationHandler.END
@@ -102,8 +100,8 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 
 def post_media(update: Update, context: CallbackContext) -> None:
     context.user_data["media"] = update.message
-    update.message.reply_markdown_v2(
-        "Now tell me the *content warnings* and *tags*, e.g.\n"
+    update.message.reply_html(
+        "Now tell me the <b>content warnings</b> and <b>tags</b>, e.g.\n"
         "• irl sexytimes with my mate\n"
         "• anthro mouse getting vored\n"
         "• fisting cute anthro wolf\n"
@@ -244,7 +242,7 @@ def nsfw(update: Update, context: CallbackContext) -> None:
         return
 
     description = "(moved from main chat)"
-    parts = update.message.text_markdown_v2.strip().split(" ", 1)
+    parts = update.message.text_html.strip().split(" ", 1)
     if len(parts) > 1:
         description = parts[1] + " " + description
 
@@ -301,17 +299,15 @@ def version(update: Update, context: CallbackContext) -> None:
     Posts bot info and Cloud Function version"""
 
     update.effective_chat.send_message(
-        "[furcast-porn-bot](https://github.com/xbnstudios/furcast-porn-bot)\n"
+        "<a href='https://github.com/xbnstudios/furcast-porn-bot'>furcast-porn-bot</a>\n"
         "GCF version: {}".format(os.environ.get("X_GOOGLE_FUNCTION_VERSION")),
         disable_web_page_preview=True,
-        parse_mode=ParseMode.MARKDOWN_V2,
+        parse_mode=ParseMode.HTML,
     )
 
 
-def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) -> None:
-    """Create the posts in both main and AD
-    description_markdown must be markdown v2
-    """
+def do_nsfw_post(bot: Bot, media_message: Message, description_html: str) -> None:
+    """Create the posts in both main and AD"""
 
     # Porn chat media forward
     try:
@@ -328,23 +324,22 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) ->
         return
 
     # Main chat link post
-    mention = "[{}](tg://user?id={})".format(
-        escape_markdown(media_message.from_user.first_name),
+    mention = "<a href='tg://user?id={}'>{}</a>".format(
         media_message.from_user.id,
-        version=2,
+        escape(media_message.from_user.first_name),
     )
     main_group_message = bot.send_message(
         main_chat,
         (
             "{mention} shared: {description}\n"
-            "[Join/post]({bot})  ⚠️  [View NSFW]({link})"
+            "<a href='{bot}'>Join/post</a>  ⚠️  <a href='{link}'>View NSFW</a>"
         ).format(
             mention=mention,
             link=post.link,
             bot=f"https://t.me/{bot.username}",
-            description=description_markdown,
+            description=description_html,
         ),
-        parse_mode=ParseMode.MARKDOWN_V2,
+        parse_mode=ParseMode.HTML,
         disable_notification=True,
         disable_web_page_preview=True,
     )
@@ -352,10 +347,10 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_markdown: str) ->
     # Porn chat description post
     bot.send_message(
         porn_chat,
-        "Shared by {} ([context]({})) with description:\n{}".format(
-            mention, main_group_message.link, description_markdown
+        "Shared by {} (<a href='{}'>context</a>) with description:\n{}".format(
+            mention, main_group_message.link, description_html
         ),
-        parse_mode=ParseMode.MARKDOWN_V2,
+        parse_mode=ParseMode.HTML,
         disable_notification=True,
         disable_web_page_preview=True,
     )
