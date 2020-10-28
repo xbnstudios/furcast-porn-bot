@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+# coding=utf-8
 
 from datetime import timedelta
-from dotenv import load_dotenv
-from flask import make_response, Request
 from html import escape
 import logging
 import os
 
+from dotenv import load_dotenv
+from flask import make_response, Request
 from telegram import (
     Bot,
     InlineKeyboardButton,
@@ -69,11 +70,11 @@ apikey = os.environ["APIKEY"]
 
 logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":  # Poll bot
-    updater = Updater(token=os.environ["TELEGRAM_TOKEN"], use_context=True)
+    updater = Updater(token=os.environ["TELEGRAM_TOKEN"])
     dispatcher = updater.dispatcher
 else:  # Webhook bot
     bot = Bot(token=os.environ["TELEGRAM_TOKEN"])
-    dispatcher = Dispatcher(bot, None, workers=0, use_context=True)
+    dispatcher = Dispatcher(bot, None, workers=0)
 
 POST_MEDIA, POST_DESCRIPTION = range(2)
 
