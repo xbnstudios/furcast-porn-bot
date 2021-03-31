@@ -332,7 +332,7 @@ def do_nsfw_post(bot: Bot, media_message: Message, description_html: str) -> Non
     main_group_message = bot.send_message(
         main_chat,
         (
-            "{mention} shared: {description}\n"
+            "{mention} shared:\n{description}\n"
             "<a href='{bot}'>Join/post</a>  ⚠️  <a href='{link}'>View NSFW</a>"
         ).format(
             mention=mention,
