@@ -228,13 +228,6 @@ def nsfw(update: Update, context: CallbackContext) -> None:
         update.message.reply_text("Sorry, this command only works in the main chat.")
         return
 
-    chat_user = context.bot.get_chat(main_chat).get_member(update.effective_user.id)
-    if chat_user.status not in ["administrator", "creator"]:
-        update.message.reply_text(
-            "Sorry, command is for admins. Please @ one if something should be moved."
-        )
-        return
-
     move_message = update.message.reply_to_message
     if move_message is None:
         update.message.reply_text(
@@ -242,8 +235,32 @@ def nsfw(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    description = "(moved from main chat)"
+    chat_user = context.bot.get_chat(main_chat).get_member(update.effective_user.id)
+    chatop = chat_user.can_delete_messages or chat_user.status == "creator"
+    if not (
+        # This is a stupid hack because MessageFilter|MessageFilter=MergedFilter,
+        # which is an UpdateFilter...
+        media_filters.filter(Update(0, move_message))
+        or chatop
+    ):
+        update.message.reply_text("Only media can be moved")
+        return
+
+    if not (move_message.from_user.id == update.effective_user.id or chatop):
+        update.message.reply_text(
+            "Sorry, command is for your own messages or admins. "
+            "Please @ an admin if someone else's post should be moved."
+        )
+        return
+
     parts = update.message.text_html.strip().split(" ", 1)
+    description = "(moved from main chat)"
+    if not (len(parts) > 1 or chatop):  # No description provided
+        update.message.reply_text(
+            "Provide a description, like <pre>/nsfw anthro mouse getting vored</pre>",
+            parse_mode=ParseMode.HTML,
+        )
+        return
     if len(parts) > 1:
         description = parts[1] + " " + description
 
