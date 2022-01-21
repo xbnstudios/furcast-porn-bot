@@ -1,4 +1,4 @@
-python-telegram-bot >=13.0,<14
-Flask >=1.1.2,<2
-python-dotenv >=0.14.0,<1
-ujson >=4.0.1,<5
+python-telegram-bot >=13.10,<14
+Flask >=2.0.2,<3
+python-dotenv >=0.19.2,<1
+ujson >=5.1.0,<6
