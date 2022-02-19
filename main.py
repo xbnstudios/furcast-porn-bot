@@ -164,7 +164,6 @@ def post_timeout(update: Update, context: CallbackContext) -> None:
         update.effective_user.id,
     )
     update.message.reply_text("Sorry, your last post timed out, try again.")
-    return ConversationHandler.END
 
 
 media_filters = (
@@ -451,3 +450,4 @@ if __name__ == "__main__":
 
     # Start responding
     updater.start_polling()
+    updater.idle()
