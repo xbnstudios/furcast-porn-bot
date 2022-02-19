@@ -81,12 +81,22 @@ POST_MEDIA, POST_DESCRIPTION = range(2)
 
 
 def post_cancel(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_cancel: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     del context.user_data["media"]
     update.message.reply_text("Cancelled")
     return ConversationHandler.END
 
 
 def post_description(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_description: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     do_nsfw_post(context.bot, context.user_data["media"], update.message.text_html)
     del context.user_data["media"]
     update.message.reply_text("Thanks, posted!")
@@ -94,6 +104,11 @@ def post_description(update: Update, context: CallbackContext) -> None:
 
 
 def post_description_error(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_description_error: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     update.message.reply_text(
         "Sorry, descriptions must be text. Send a text description, or /cancel"
     )
@@ -101,6 +116,11 @@ def post_description_error(update: Update, context: CallbackContext) -> None:
 
 
 def post_media(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_media: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     context.user_data["media"] = update.message
     update.message.reply_html(
         "Now tell me the <b>content warnings</b> and <b>tags</b>, e.g.\n"
@@ -113,6 +133,11 @@ def post_media(update: Update, context: CallbackContext) -> None:
 
 
 def post_media_error(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_media_error: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     update.message.reply_text(
         "Hi, I help you share NSFW content. This system is meant for media, "
         "which I didn't see in what you sent. If I forgot what we were "
@@ -123,11 +148,21 @@ def post_media_error(update: Update, context: CallbackContext) -> None:
 
 
 def post_post(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_post: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     update.message.reply_text("Just send me the media you want to share!")
     return POST_MEDIA
 
 
 def post_timeout(update: Update, context: CallbackContext) -> None:
+    logging.debug(
+        "post_timeout: %s %s",
+        update.effective_user.username,
+        update.effective_user.id,
+    )
     update.message.reply_text("Sorry, your last post timed out, try again.")
     return ConversationHandler.END
 
