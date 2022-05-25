@@ -9,8 +9,10 @@ NSFW channel (for posting).
 * Main group: Delete messages
 * NSFW channel: Send messages, Add members
 
-See the [furcast-tg-bot](https://github.com/xbnstudios/furcast-tg-bot)
-setup instructions. This bot will almost certainly not work properly on GCF.
+See the old
+[furcast-tg-bot setup instructions](https://github.com/xbnstudios/furcast-tg-bot/blob/0921ef053b3abd9b28127de7b175d3ee303f403b/README.md#how-to-use).
+This bot will not work properly on GCF, since GCF kills applications
+aggressively and this is not written to persist its conversation state.
 
 ## Commands
 None are registered with BotFather. The only end-user command is /start, which
