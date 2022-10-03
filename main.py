@@ -17,6 +17,7 @@ from telegram import (
     MessageEntity,
     ParseMode,
     Update,
+    User,
 )
 import telegram.error
 from telegram.ext import (
@@ -80,6 +81,32 @@ else:  # Webhook bot
 POST_MEDIA, POST_DESCRIPTION = range(2)
 
 
+def in_main_chat(bot: Bot, user: User) -> bool:
+    try:
+        main_chat_user = bot.get_chat(main_chat).get_member(user.id)
+    except telegram.error.BadRequest as e:
+        logging.warning(
+            "Error finding user %s (%s): %s",
+            user.name,
+            user.id,
+            e,
+        )
+        main_chat_user = None
+    if main_chat_user is None or main_chat_user.status not in [
+        "member",
+        "administrator",
+        "creator",
+    ]:
+        logging.warning(
+            "User not in main chat: %s (%s): %s",
+            user.name,
+            user.id,
+            main_chat_user,
+        )
+        return False
+    return True
+
+
 def post_cancel(update: Update, context: CallbackContext) -> None:
     logging.debug(
         "post_cancel: %s %s",
@@ -121,6 +148,9 @@ def post_media(update: Update, context: CallbackContext) -> None:
         update.effective_user.username,
         update.effective_user.id,
     )
+    if not in_main_chat(context.bot, update.effective_user):
+        update.message.reply_text("Sorry, this bot serves a private group.")
+        return
     context.user_data["media"] = update.message
     update.message.reply_html(
         "Now tell me the <b>content warnings</b> and <b>tags</b>, e.g.\n"
@@ -138,6 +168,9 @@ def post_media_error(update: Update, context: CallbackContext) -> None:
         update.effective_user.username,
         update.effective_user.id,
     )
+    if not in_main_chat(context.bot, update.effective_user):
+        update.message.reply_text("Sorry, this bot serves a private group.")
+        return
     update.message.reply_text(
         "Hi, I help you share NSFW content. This system is meant for media, "
         "which I didn't see in what you sent. If I forgot what we were "
@@ -216,30 +249,7 @@ def start(update: Update, context: CallbackContext) -> None:
         update.effective_user.id,
     )
 
-    # Make sure user is in the main chat
-    try:
-        main_chat_user = context.bot.get_chat(main_chat).get_member(
-            update.effective_user.id
-        )
-    except telegram.error.BadRequest as e:
-        logging.warning(
-            "Error finding user %s (%s): %s",
-            update.effective_user.name,
-            update.effective_user.id,
-            e,
-        )
-        main_chat_user = None
-    if main_chat_user is None or main_chat_user.status not in [
-        "member",
-        "administrator",
-        "creator",
-    ]:
-        logging.warning(
-            "Not inviting %s (%s): %s",
-            update.effective_user.name,
-            update.effective_user.id,
-            main_chat_user,
-        )
+    if not in_main_chat(context.bot, update.effective_user):
         update.message.reply_text("Sorry, this bot serves a private group.")
         return
 
