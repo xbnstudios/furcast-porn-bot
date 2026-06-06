@@ -5,7 +5,7 @@ Description=FurCast Porn Bot
 Type=simple
 Restart=always
 WorkingDirectory=/home/bots/furcast-porn-bot
-ExecStart=/usr/bin/pipenv run ./main.py
+ExecStart=/home/bots/furcast-porn-bot/venv/bin/furcastpornbot
 
 [Install]
 WantedBy=default.target
