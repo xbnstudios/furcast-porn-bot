@@ -32,6 +32,9 @@ from telegram.ext import (
     MessageHandler,
 )
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 load_dotenv()
 if "TELEGRAM_TOKEN" not in os.environ or "APIKEY" not in os.environ:
     logging.error("You forgot to set one of the environment vars!")
@@ -69,8 +72,6 @@ else:
 join_link = os.environ.get("JOIN_LINK")
 apikey = os.environ["APIKEY"]
 
-
-logging.basicConfig(level=logging.INFO)
 
 POST_MEDIA, POST_DESCRIPTION = range(2)
 
